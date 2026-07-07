@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>GrammarGuru AI – Live Demo</title>
+  <!-- Tailwind via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <!-- Google Font Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ----- Custom Variables & Reset ----- */
+    :root {
+      --primary: #2563EB;
+      --primary-light: #3B82F6;
+      --primary-dark: #1D4ED8;
+      --secondary: #10B981;
+      --secondary-light: #34D399;
+      --bg: #F3F4F6;
+      --card-bg: #FFFFFF;
+      --text: #1F2937;
+      --text-secondary: #6B7280;
+      --border: #E5E7EB;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+      --radius: 24px;
+      --radius-sm: 16px;
+      --nav-height: 72px;
+    }
+    .dark {
+      --bg: #111827;
+      --card-bg: #1F2937;
+      --text: #F9FAFB;
+      --text-secondary: #9CA3AF;
+      --border: #374151;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.3s, color 0.3s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 12px;
+    }
+    .app-container {
+      max-width: 420px;
+      width: 100%;
+      background: var(--bg);
+      border-radius: 32px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+      position: relative;
+      height: 780px;
+      display: flex;
+      flex-direction: column;
+      transition: background 0.3s;
+    }
+    .app-header {
+      padding: 20px 20px 8px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg);
+      transition: background 0.3s;
+      flex-shrink: 0;
+    }
+    .app-title {
+      font-size: 20px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-actions button {
+      background: var(--card-bg);
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      font-size: 18px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .header-actions button:active { transform: scale(0.92); }
+    .avatar-btn {
+      background: var(--primary-light) !important;
+      color: white !important;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .dark-toggle {
+      background: var(--card-bg) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 40px !important;
+      width: 52px !important;
+      height: 28px !important;
+      padding: 0 4px !important;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .dark-toggle .toggle-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: white;
+      position: absolute;
+      left: 2px;
+      transition: transform 0.3s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .dark-toggle.dark .toggle-dot {
+      transform: translateX(24px);
+      background: #FBBF24;
+    }
+    .dark-toggle i { font-size: 12px; color: var(--text-secondary); z-index: 1; }
+    .content-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 20px 20px 20px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+    .content-area::-webkit-scrollbar { width: 4px; }
+    .content-area::-webkit-scrollbar-track { background: transparent; }
+    .content-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 20px; }
+    .tab-panel { display: none; animation: fadeUp 0.25s ease; }
+    .tab-panel.active { display: block; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius-sm);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+      transition: background 0.3s, box-shadow 0.3s;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .streak-badge {
+      background: #FEF3C7;
+      color: #D97706;
+      padding: 4px 12px;
+      border-radius: 40px;
+      font-weight: 700;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: transform 0.2s;
+    }
+    .streak-badge.pop { animation: pop 0.3s ease; }
+    @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+    .level-progress {
+      background: var(--border);
+      border-radius: 40px;
+      height: 8px;
+      width: 100%;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .level-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border-radius: 40px;
+      width: 68%;
+      transition: width 0.6s;
+    }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .stat-item {
+      text-align: center;
+      background: var(--bg);
+      padding: 10px 4px;
+      border-radius: var(--radius-sm);
+      transition: background 0.3s;
+    }
+    .stat-item .number {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1.2;
+      transition: transform 0.2s;
+    }
+    .stat-item .number.bump { animation: bump 0.3s ease; }
+    @keyframes bump { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+    .stat-item .label { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+    .weekly-bars {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      height: 80px;
+      padding-top: 8px;
+      gap: 4px;
+    }
+    .bar-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+    }
+    .bar {
+      width: 100%;
+      max-width: 28px;
+      background: var(--primary-light);
+      border-radius: 8px 8px 4px 4px;
+      transition: height 0.6s;
+      min-height: 4px;
+    }
+    .bar-label { font-size: 10px; color: var(--text-secondary); margin-top: 4px; font-weight: 500; }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px 20px;
+      border-radius: 60px;
+      font-weight: 700;
+      font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+    .btn-primary:active { transform: scale(0.97); }
+    .btn-secondary {
+      background: var(--secondary);
+      color: white;
+      border: none;
+      padding: 14px 20px;
+      border-radius: 60px;
+      font-weight: 700;
+      font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+    }
+    .btn-secondary:active { transform: scale(0.97); }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      padding: 12px 18px;
+      border-radius: 60px;
+      font-weight: 700;
+      font-size: 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-outline:active { background: var(--primary); color: white; }
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .action-grid .btn-primary, .action-grid .btn-secondary, .action-grid .btn-outline { font-size: 14px; padding: 12px 10px; }
+    .chat-messages {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-bottom: 8px;
+    }
+    .message {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 20px;
+      font-size: 15px;
+      line-height: 1.5;
+      position: relative;
+      word-wrap: break-word;
+    }
+    .message.user {
+      align-self: flex-end;
+      background: var(--primary);
+      color: white;
+      border-bottom-right-radius: 6px;
+    }
+    .message.ai {
+      align-self: flex-start;
+      background: var(--card-bg);
+      color: var(--text);
+      border-bottom-left-radius: 6px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+    .message .listen-btn {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 16px;
+      cursor: pointer;
+      margin-left: 6px;
+      padding: 2px 6px;
+      border-radius: 30px;
+      transition: background 0.2s;
+    }
+    .message .listen-btn:hover { background: var(--bg); }
+    .chat-input-area {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 6px 6px 6px 16px;
+      border-radius: 60px;
+      border: 1px solid var(--border);
+      transition: background 0.3s, border 0.3s;
+      margin-top: 8px;
+    }
+    .chat-input-area input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 12px 0;
+      font-size: 15px;
+      outline: none;
+      color: var(--text);
+      font-family: inherit;
+    }
+    .chat-input-area input::placeholder { color: var(--text-secondary); }
+    .chat-input-area button {
+      background: transparent;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      flex-shrink: 0;
+    }
+    .chat-input-area button:active { background: var(--border); }
+    .chat-input-area .send-btn {
+      background: var(--primary);
+      color: white;
+      width: 48px;
+      height: 48px;
+      font-size: 18px;
+    }
+    .chat-input-area .send-btn:active { background: var(--primary-dark); }
+    .bottom-nav {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: var(--card-bg);
+      padding: 8px 0 env(safe-area-inset-bottom, 8px) 0;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+      height: var(--nav-height);
+      transition: background 0.3s, border 0.3s;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 4px 12px;
+      transition: color 0.2s;
+      position: relative;
+    }
+    .nav-item i { font-size: 22px; transition: transform 0.2s; }
+    .nav-item.active { color: var(--primary); }
+    .nav-item.active i { transform: translateY(-2px); }
+    .nav-item .badge-dot {
+      position: absolute;
+      top: 0;
+      right: 6px;
+      width: 8px;
+      height: 8px;
+      background: #EF4444;
+      border-radius: 50%;
+      border: 2px solid var(--card-bg);
+    }
+    .flex-center { display: flex; align-items: center; justify-content: center; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .text-muted { color: var(--text-secondary); }
+    .badge-emoji { font-size: 28px; }
+    .coin-display {
+      background: #FEF3C7;
+      padding: 2px 12px 2px 8px;
+      border-radius: 40px;
+      font-weight: 700;
+      color: #D97706;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+    }
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 8px 0;
+      align-self: flex-start;
+    }
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      background: var(--text-secondary);
+      border-radius: 50%;
+      animation: typing 1.4s infinite both;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing {
+      0% { opacity: 0.2; transform: scale(0.8); }
+      50% { opacity: 1; transform: scale(1.2); }
+      100% { opacity: 0.2; transform: scale(0.8); }
+    }
+    .quiz-option {
+      background: var(--bg);
+      padding: 10px 14px;
+      border-radius: 60px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+    .quiz-option:hover { border-color: var(--primary); }
+    .quiz-option.correct { border-color: var(--secondary); background: #D1FAE5; }
+    .quiz-option.wrong { border-color: #EF4444; background: #FEE2E2; }
+    .quiz-option.disabled { pointer-events: none; opacity: 0.7; }
+    @media (max-width: 480px) {
+      .app-container { height: 100vh; border-radius: 0; max-width: 100%; padding: 0; }
+      body { padding: 0; }
+      .app-header { padding: 16px 16px 4px 16px; }
+      .content-area { padding: 0 16px 16px 16px; }
+    }
+    .dark-toggle { background: var(--border) !important; }
+    .dark-toggle.dark { background: #374151 !important; }
+    .content-area { scrollbar-width: thin; }
+  </style>
+</head>
+<body>
+  <div class="app-container" id="app">
+    <!-- HEADER -->
+    <header class="app-header">
+      <span class="app-title">GrammarGuru AI</span>
+      <div class="header-actions">
+        <div class="dark-toggle" id="darkToggle" onclick="toggleDark()">
+          <i class="fas fa-sun"></i><i class="fas fa-moon"></i><span class="toggle-dot"></span>
+        </div>
+        <button class="avatar-btn" title="Profile">A</button>
+        <button onclick="alert('🔔 You have 3 notifications')"><i class="fas fa-bell"></i></button>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="content-area" id="contentArea">
+
+      <!-- HOME TAB -->
+      <div class="tab-panel active" id="panel-home">
+        <!-- Welcome -->
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <div class="text-2xl font-bold" id="greeting">Good Morning, Alex! 👋</div>
+            <div class="text-sm text-muted">Let's make today's grammar amazing!</div>
+          </div>
+          <div class="streak-badge" id="streakBadge"><i class="fas fa-fire"></i> <span id="streakCount">7</span> Day Streak</div>
+        </div>
+
+        <!-- Level & Stats -->
+        <div class="card">
+          <div class="flex justify-between items-center">
+            <div>
+              <div class="font-bold text-lg">Level <span id="levelDisplay">5</span></div>
+              <div class="text-xs text-muted"><span id="xpDisplay">1280</span> / 1500 XP</div>
+            </div>
+            <div class="coin-display"><i class="fas fa-coins"></i> <span id="coinDisplay">340</span></div>
+          </div>
+          <div class="level-progress mt-1"><div class="level-progress-bar" id="xpProgress" style="width:68%"></div></div>
+          <div class="stat-grid mt-3">
+            <div class="stat-item"><div class="number" id="badgeCount">12</div><div class="label">Badges</div></div>
+            <div class="stat-item"><div class="number" id="accuracyDisplay">87%</div><div class="label">Accuracy</div></div>
+            <div class="stat-item"><div class="number" id="hoursDisplay">4.2h</div><div class="label">This Week</div></div>
+            <div class="stat-item"><div class="number">⭐</div><div class="label">A+</div></div>
+          </div>
+        </div>
+
+        <!-- Weekly Progress -->
+        <div class="card">
+          <div class="card-title"><i class="fas fa-chart-simple"></i> Weekly Progress</div>
+          <div class="weekly-bars" id="weeklyBars">
+            <div class="bar-wrapper"><div class="bar" style="height:36px"></div><span class="bar-label">M</span></div>
+            <div class="bar-wrapper"><div class="bar" style="height:52px"></div><span class="bar-label">T</span></div>
+            <div class="bar-wrapper"><div class="bar" style="height:28px"></div><span class="bar-label">W</span></div>
+            <div class="bar-wrapper"><div class="bar" style="height:68px"></div><span class="bar-label">T</span></div>
+            <div class="bar-wrapper"><div class="bar" style="height:44px"></div><span class="bar-label">F</span></div>
+            <div class="bar-wrapper"><div class="bar" style="height:76px"></div><span class="bar-label">S</span></div>
+            <div class="bar-wrapper"><div class="bar" style="height:30px"></div><span class="bar-label">S</span></div>
+          </div>
+        </div>
+
+        <!-- Recent Mistakes -->
+        <div class="card">
+          <div class="card-title"><i class="fas fa-rotate-left"></i> Recent Mistakes</div>
+          <div class="space-y-2" id="mistakesList">
+            <div class="flex justify-between items-center border-b border-border pb-2 last:border-0 last:pb-0">
+              <div><span class="font-medium">Their vs There</span> <span class="text-xs text-muted">· Yesterday</span></div>
+              <button class="text-xs text-primary font-semibold review-btn" onclick="reviewMistake(this)">Review</button>
+            </div>
+            <div class="flex justify-between items-center border-b border-border pb-2 last:border-0 last:pb-0">
+              <div><span class="font-medium">Subject-Verb Agreement</span> <span class="text-xs text-muted">· 2 days ago</span></div>
+              <button class="text-xs text-primary font-semibold review-btn" onclick="reviewMistake(this)">Review</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recommended Lesson -->
+        <div class="card" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
+          <div class="flex justify-between items-center">
+            <div>
+              <div class="text-xs opacity-80">📚 Recommended</div>
+              <div class="font-bold text-lg">Tenses: Present Perfect</div>
+              <div class="text-sm opacity-90 mt-1">Master this tricky tense with real examples</div>
+            </div>
+            <button class="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-semibold border border-white/30" onclick="startLesson()">Start</button>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-grid">
+          <button class="btn-primary" onclick="continueLearning()"><i class="fas fa-play"></i> Continue</button>
+          <button class="btn-secondary" onclick="startPractice()"><i class="fas fa-pen"></i> Practice</button>
+          <button class="btn-outline" onclick="startMockTest()"><i class="fas fa-clock"></i> Mock Test</button>
+          <button class="btn-outline" onclick="switchTab('chat')"><i class="fas fa-robot"></i> Ask AI</button>
+        </div>
+
+        <!-- Daily Challenge -->
+        <div class="card flex justify-between items-center mt-2" id="dailyChallenge">
+          <div>
+            <div class="text-sm font-semibold">🎯 Daily Challenge</div>
+            <div class="text-xs text-muted">Identify the error in this sentence</div>
+          </div>
+          <button class="bg-primary text-white px-4 py-2 rounded-full text-sm font-semibold" onclick="startDailyChallenge()">Try</button>
+        </div>
+      </div>
+
+      <!-- CHAT TAB -->
+      <div class="tab-panel" id="panel-chat">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <div class="text-xl font-bold">AI Tutor</div>
+            <div class="text-xs text-muted">Ask me anything about grammar</div>
+          </div>
+          <button class="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-semibold" onclick="alert('🎤 Voice input started... (demo)')"><i class="fas fa-microphone"></i> Voice</button>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+          <!-- Initial AI message -->
+          <div class="message ai">
+            <div>Hi Alex! 👋 I'm your Grammar Guru. Let's practice <strong>Present Perfect</strong> today. Can you tell me when we use "have/has + past participle"?</div>
+            <div class="mt-1 flex items-center gap-2">
+              <button class="listen-btn" onclick="alert('🔊 Playing TTS (demo)')"><i class="fas fa-volume-up"></i> Listen Again</button>
+              <span class="text-xs text-muted">· just now</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="chat-input-area">
+          <input type="text" placeholder="Type your message..." id="chatInput">
+          <button onclick="alert('🎤 Voice input started... (demo)')"><i class="fas fa-microphone"></i></button>
+          <button onclick="document.getElementById('fileInput').click()"><i class="fas fa-image"></i></button>
+          <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="alert('📷 Image uploaded! (demo)')">
+          <button class="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+      </div>
+
+      <!-- PRACTICE TAB -->
+      <div class="tab-panel" id="panel-practice">
+        <div class="text-xl font-bold mb-2">Practice Topics</div>
+        <div class="text-sm text-muted mb-4">Choose a topic to start practicing</div>
+        <div class="grid grid-cols-2 gap-3" id="topicGrid">
+          <div class="card text-center cursor-pointer hover:shadow-md transition" onclick="startTopic('Tenses')">
+            <div class="text-3xl">📘</div>
+            <div class="font-semibold text-sm">Tenses</div>
+            <div class="text-xs text-muted">12 lessons</div>
+          </div>
+          <div class="card text-center cursor-pointer hover:shadow-md transition" onclick="startTopic('Active/Passive')">
+            <div class="text-3xl">✍️</div>
+            <div class="font-semibold text-sm">Active/Passive</div>
+            <div class="text-xs text-muted">8 lessons</div>
+          </div>
+          <div class="card text-center cursor-pointer hover:shadow-md transition" onclick="startTopic('Conjunctions')">
+            <div class="text-3xl">🔗</div>
+            <div class="font-semibold text-sm">Conjunctions</div>
+            <div class="text-xs text-muted">6 lessons</div>
+          </div>
+          <div class="card text-center cursor-pointer hover:shadow-md transition" onclick="startTopic('Error Spotting')">
+            <div class="text-3xl">🎯</div>
+            <div class="font-semibold text-sm">Error Spotting</div>
+            <div class="text-xs text-muted">10 lessons</div>
+          </div>
+        </div>
+        <button class="btn-primary mt-4" onclick="randomQuiz()"><i class="fas fa-shuffle"></i> Random Quiz</button>
+        <!-- Dynamic quiz area -->
+        <div id="quizArea" class="mt-4" style="display:none;"></div>
+      </div>
+
+      <!-- PROGRESS TAB -->
+      <div class="tab-panel" id="panel-progress">
+        <div class="text-xl font-bold mb-2">Your Progress</div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-chart-line"></i> Monthly Growth</div>
+          <div class="h-32 flex items-end justify-between gap-1 mt-2">
+            <div class="flex flex-col items-center flex-1"><div class="w-full bg-primary/30 rounded-t-md" style="height:20px"></div><span class="text-xs mt-1">W1</span></div>
+            <div class="flex flex-col items-center flex-1"><div class="w-full bg-primary/50 rounded-t-md" style="height:36px"></div><span class="text-xs mt-1">W2</span></div>
+            <div class="flex flex-col items-center flex-1"><div class="w-full bg-primary rounded-t-md" style="height:58px"></div><span class="text-xs mt-1">W3</span></div>
+            <div class="flex flex-col items-center flex-1"><div class="w-full bg-primary/80 rounded-t-md" style="height:44px"></div><span class="text-xs mt-1">W4</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fas fa-brain"></i> Grammar Mastery</div>
+          <div class="space-y-2">
+            <div><span class="text-sm">Tenses</span><div class="level-progress mt-1"><div class="level-progress-bar" style="width:85%"></div></div></div>
+            <div><span class="text-sm">Active/Passive</span><div class="level-progress mt-1"><div class="level-progress-bar" style="width:60%"></div></div></div>
+            <div><span class="text-sm">Reported Speech</span><div class="level-progress mt-1"><div class="level-progress-bar" style="width:40%"></div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFILE TAB -->
+      <div class="tab-panel" id="panel-profile">
+        <div class="flex flex-col items-center">
+          <div class="w-24 h-24 bg-primary rounded-full flex items-center justify-center text-4xl text-white font-bold mb-2">A</div>
+          <div class="text-xl font-bold">Alex Johnson</div>
+          <div class="text-sm text-muted">Student · Level <span id="profileLevel">5</span></div>
+          <div class="flex gap-4 mt-3">
+            <div class="text-center"><div class="font-bold" id="profileCoins">340</div><div class="text-xs text-muted">Coins</div></div>
+            <div class="text-center"><div class="font-bold" id="profileBadges">12</div><div class="text-xs text-muted">Badges</div></div>
+            <div class="text-center"><div class="font-bold" id="profileAccuracy">87%</div><div class="text-xs text-muted">Accuracy</div></div>
+          </div>
+          <button class="btn-outline w-full mt-4" onclick="alert('Logging out... (demo)')"><i class="fas fa-sign-out-alt"></i> Logout</button>
+          <div class="w-full mt-6">
+            <div class="font-semibold mb-2">Recent Achievements</div>
+            <div class="flex gap-3 flex-wrap">
+              <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">🔥 7-Day Streak</span>
+              <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">⭐ Quiz Master</span>
+              <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">📖 50 Lessons</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-tab="home"><i class="fas fa-house"></i><span>Home</span></button>
+      <button class="nav-item" data-tab="chat"><i class="fas fa-comment-dots"></i><span>Chat</span><span class="badge-dot"></span></button>
+      <button class="nav-item" data-tab="practice"><i class="fas fa-pencil"></i><span>Practice</span></button>
+      <button class="nav-item" data-tab="progress"><i class="fas fa-chart-simple"></i><span>Progress</span></button>
+      <button class="nav-item" data-tab="profile"><i class="fas fa-user"></i><span>Profile</span></button>
+    </nav>
+  </div>
+
+  <script>
+    // ----- Dark Mode -----
+    function toggleDark() {
+      const app = document.getElementById('app');
+      const toggle = document.getElementById('darkToggle');
+      app.classList.toggle('dark');
+      toggle.classList.toggle('dark');
+      localStorage.setItem('darkMode', app.classList.contains('dark') ? 'true' : 'false');
+    }
+    (function() {
+      const dark = localStorage.getItem('darkMode') === 'true';
+      if (dark) {
+        document.getElementById('app').classList.add('dark');
+        document.getElementById('darkToggle').classList.add('dark');
+      }
+    })();
+
+    // ----- Tab Navigation -----
+    const navItems = document.querySelectorAll('.nav-item');
+    const panels = {
+      home: document.getElementById('panel-home'),
+      chat: document.getElementById('panel-chat'),
+      practice: document.getElementById('panel-practice'),
+      progress: document.getElementById('panel-progress'),
+      profile: document.getElementById('panel-profile'),
+    };
+    function switchTab(tab) {
+      navItems.forEach(n => n.classList.remove('active'));
+      document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
+      Object.keys(panels).forEach(key => panels[key].classList.toggle('active', key === tab));
+      document.getElementById('contentArea').scrollTop = 0;
+    }
+    navItems.forEach(item => {
+      item.addEventListener('click', function() {
+        switchTab(this.dataset.tab);
+      });
+    });
+
+    // ----- Dynamic State -----
+    let state = {
+      streak: 7,
+      level: 5,
+      xp: 1280,
+      maxXp: 1500,
+      coins: 340,
+      badges: 12,
+      accuracy: 87,
+      hours: 4.2,
+    };
+
+    function updateUI() {
+      document.getElementById('streakCount').textContent = state.streak;
+      document.getElementById('levelDisplay').textContent = state.level;
+      document.getElementById('xpDisplay').textContent = state.xp;
+      document.getElementById('coinDisplay').textContent = state.coins;
+      document.getElementById('badgeCount').textContent = state.badges;
+      document.getElementById('accuracyDisplay').textContent = state.accuracy + '%';
+      document.getElementById('hoursDisplay').textContent = state.hours + 'h';
+      document.getElementById('profileLevel').textContent = state.level;
+      document.getElementById('profileCoins').textContent = state.coins;
+      document.getElementById('profileBadges').textContent = state.badges;
+      document.getElementById('profileAccuracy').textContent = state.accuracy + '%';
+      let pct = Math.min(100, (state.xp / state.maxXp) * 100);
+      document.getElementById('xpProgress').style.width = pct + '%';
+    }
+
+    function addXP(amount) {
+      state.xp += amount;
+      if (state.xp >= state.maxXp) {
+        state.level++;
+        state.xp = 0;
+        state.maxXp = Math.round(state.maxXp * 1.3);
+        alert('🎉 Level Up! You are now Level ' + state.level);
+      }
+      updateUI();
+      // bump animation on XP number
+      const xpEl = document.getElementById('xpDisplay');
+      xpEl.parentElement.parentElement.parentElement.querySelector('.stat-item .number')?.classList.add('bump');
+    }
+
+    function addCoins(amount) {
+      state.coins += amount;
+      updateUI();
+      document.querySelector('.coin-display')?.classList.add('pop');
+      setTimeout(() => document.querySelector('.coin-display')?.classList.remove('pop'), 300);
+    }
+
+    function addStreak() {
+      state.streak++;
+      document.getElementById('streakBadge').classList.remove('pop');
+      void document.getElementById('streakBadge').offsetWidth; // trigger reflow
+      document.getElementById('streakBadge').classList.add('pop');
+      updateUI();
+    }
+
+    // ----- Chat -----
+    function sendMessage() {
+      const input = document.getElementById('chatInput');
+      const text = input.value.trim();
+      if (!text) return;
+      const chat = document.getElementById('chatMessages');
+      // User message
+      const userMsg = document.createElement('div');
+      userMsg.className = 'message user';
+      userMsg.textContent = text;
+      chat.appendChild(userMsg);
+      input.value = '';
+      scrollChat();
+
+      // Show typing indicator
+      const typing = document.createElement('div');
+      typing.className = 'typing-indicator';
+      typing.innerHTML = '<span></span><span></span><span></span>';
+      chat.appendChild(typing);
+      scrollChat();
+
+      // Simulate AI response
+      setTimeout(() => {
+        chat.removeChild(typing);
+        const aiMsg = document.createElement('div');
+        aiMsg.className = 'message ai';
+        let reply = '';
+        const lower = text.toLowerCase();
+        if (lower.includes('present perfect') || lower.includes('have') || lower.includes('has')) {
+          reply = 'Great question! 🎯 The present perfect connects the past and present. We use <strong>have/has + past participle</strong> for actions that happened at an unspecified time or started in the past and continue now. Example: <em>"I have studied English for 3 years."</em> Keep it up!';
+        } else if (lower.includes('hello') || lower.includes('hi')) {
+          reply = 'Hello Alex! 👋 Ready to master grammar? Ask me about tenses, prepositions, or anything else!';
+        } else if (lower.includes('help') || lower.includes('advice')) {
+          reply = 'Of course! 😊 I recommend starting with our daily challenge or reviewing your recent mistakes. I\'m here to guide you every step of the way.';
+        } else {
+          reply = 'That\'s an interesting point! 🤔 Let me explain: In English, grammar rules help us communicate clearly. Can you give me an example? I\'ll help you improve it.';
+        }
+        aiMsg.innerHTML = `<div>${reply}</div>
+          <div class="mt-1 flex items-center gap-2">
+            <button class="listen-btn" onclick="alert('🔊 Playing TTS (demo)')"><i class="fas fa-volume-up"></i> Listen Again</button>
+            <span class="text-xs text-muted">· just now</span>
+          </div>`;
+        chat.appendChild(aiMsg);
+        scrollChat();
+        // Award coins for interaction
+        addCoins(2);
+        addXP(5);
+      }, 1200 + Math.random() * 800);
+    }
+
+    function scrollChat() {
+      const area = document.getElementById('contentArea');
+      setTimeout(() => area.scrollTop = area.scrollHeight, 100);
+    }
+
+    // Enter key
+    document.getElementById('chatInput').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    // ----- Practice / Quiz -----
+    function startTopic(topic) {
+      alert('Starting practice on "' + topic + '" (demo) – a quiz will appear!');
+      showQuiz(topic);
+    }
+
+    function randomQuiz() {
+      const topics = ['Tenses', 'Active/Passive', 'Conjunctions', 'Error Spotting'];
+      const t = topics[Math.floor(Math.random() * topics.length)];
+      showQuiz(t);
+    }
+
+    function showQuiz(topic) {
+      const area = document.getElementById('quizArea');
+      area.style.display = 'block';
+      area.innerHTML = `
+        <div class="card">
+          <div class="font-bold text-lg">${topic} Quiz</div>
+          <div class="text-sm text-muted mb-2">Choose the correct option</div>
+          <div class="space-y-2">
+            <div class="quiz-option" onclick="checkQuiz(this, true)">A) She has went to school.</div>
+            <div class="quiz-option" onclick="checkQuiz(this, false)">B) She has gone to school.</div>
+            <div class="quiz-option" onclick="checkQuiz(this, false)">C) She have gone to school.</div>
+            <div class="quiz-option" onclick="checkQuiz(this, false)">D) She went has to school.</div>
+          </div>
+          <div id="quizFeedback" class="mt-2 text-sm font-semibold"></div>
+        </div>
+      `;
+      area.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function checkQuiz(el, correct) {
+      const options = document.querySelectorAll('.quiz-option');
+      options.forEach(opt => opt.classList.add('disabled'));
+      if (correct) {
+        el.classList.add('correct');
+        document.getElementById('quizFeedback').innerHTML = '✅ Correct! Great job! +10 XP, +5 Coins';
+        addXP(10);
+        addCoins(5);
+        addStreak();
+      } else {
+        el.classList.add('wrong');
+        document.getElementById('quizFeedback').innerHTML = '❌ Oops! The correct answer is A) "She has gone to school." Let\'s review the present perfect.';
+        // Show correct answer
+        options.forEach(opt => {
+          if (opt.textContent.includes('gone to school')) opt.classList.add('correct');
+        });
+      }
+    }
+
+    // ----- Other Interactions -----
+    function continueLearning() {
+      alert('📚 Continuing your last lesson... (demo)');
+      addXP(5);
+      addCoins(1);
+    }
+
+    function startPractice() {
+      switchTab('practice');
+    }
+
+    function startMockTest() {
+      alert('⏳ Mock test starting... (demo)');
+      addXP(10);
+    }
+
+    function startLesson() {
+      alert('📖 Starting recommended lesson: Present Perfect (demo)');
+      addXP(8);
+    }
+
+    function startDailyChallenge() {
+      alert('🎯 Daily Challenge: "Identify the error: He don\'t like coffee." (demo)');
+    }
+
+    function reviewMistake(btn) {
+      alert('📘 Reviewing: ' + btn.parentElement.querySelector('.font-medium').textContent + ' (demo)');
+      addXP(3);
+    }
+
+    // Update greeting based on time
+    (function setGreeting() {
+      const hour = new Date().getHours();
+      let greet = 'Good Morning';
+      if (hour >= 12 && hour < 17) greet = 'Good Afternoon';
+      else if (hour >= 17) greet = 'Good Evening';
+      document.getElementById('greeting').textContent = greet + ', Alex! 👋';
+    })();
+
+    // Initial UI update
+    updateUI();
+  </script>
+</body>
+</html>
